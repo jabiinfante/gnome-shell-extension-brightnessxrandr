@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="gnome-shell-extensions-brightnessxrandr">
+  <schema id="org.gnome.shell.extensions.brightnessxrandr" path="/org/gnome/shell/extensions/brightnessxrandr/">
+    <key type="b" name="show-notification-on-message">
+      <default>true</default>
+      <summary>show notification with the copied message</summary>
+      <description>display the just fetched message on a notification message.</description>
+    </key>
+    <key type="b" name="include-m">
+      <default>true</default>
+      <summary>include "-m" in the copied message</summary>
+      <description>copy text with the -m toggle ready. Will force single quote.</description>
+    </key>
+    <key type="s" name="quotes">
+      <default>"'"</default>
+      <summary>Copy wtc message wrapped with quotes</summary>
+      <description>Will automatically wrap with specified quotes the message.</description>
+    </key>
+
+  </schema>
+</schemalist>
