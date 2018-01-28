@@ -1,17 +1,13 @@
 const Lang = imports.lang;
 const St = imports.gi.St;
-
 const Main = imports.ui.main;
-const Gio = imports.gi.Gio;
-
 const PanelMenu = imports.ui.panelMenu;
-const PopupMenu = imports.ui.popupMenu;
-const Slider = imports.ui.slider;
 
 const Clutter = imports.gi.Clutter;
-const Util = imports.misc.util;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Xrandr = Me.imports.xrandr;
+const Slide = Me.imports.slide;
 
 const Convenience = Me.imports.convenience;
 
@@ -30,7 +26,6 @@ const Brightnessxrandr = new Lang.Class({
     this.y_fill = false;
     this.track_hover = true;
 
-    log("hola");
     /**
      * Load whatthecommit scheme settings
      */
@@ -40,44 +35,66 @@ const Brightnessxrandr = new Lang.Class({
      * ui
      */
     let _topBox = new St.BoxLayout();
-
     this.icon = new St.Icon({
       icon_name: "display-brightness-symbolic",
       style_class: "system-status-icon"
     });
     _topBox.add_child(this.icon);
     this.actor.add_actor(_topBox);
-
-    this._itemLabel = new PopupMenu.PopupBaseMenuItem({ activate: false })
-    this.menu.addMenuItem(this._itemLabel)
-
-    this._itemLabel.actor.add(new St.Icon({
-      icon_name: "display-brightness-symbolic",
-      style_class: "popup-menu-icon"
-    }));
-
-    this.currentBright = 50;
-    this.currentLabel = new St.Label({
-      text: 'eDP (70%)'      
-    });
-    this._itemLabel.actor.add(this.currentLabel);
-    
-    
-    this._item = new PopupMenu.PopupBaseMenuItem({ activate: false })
-    this.menu.addMenuItem(this._item)
-    this._slider = new Slider.Slider(this.currentBright / 100)
-    this._slider.connect('value-changed', (slider, value) => this._sliderChanged(slider, value))
-    this._slider.actor.accessible_name = 'Brightness'
-    this._item.actor.add(this._slider.actor, { expand: true })
+    this.actor.connect('scroll-event', Lang.bind(this, this._onScrollEvent));
+    this.loadDevices();
 
   },
-  _sliderChanged: function(slider, value) {
-    this.currentBright = Math.round(value*100);
-    this.currentLabel.set_text('eDP (' + this.currentBright+ '%)');
 
-    Util.spawn(['xrandr', '--output', 'eDP', '--brightness', '' + (this.currentBright/100)]);
-    
-  }
+  loadDevices: function() {
+
+    this.menu.removeAll();
+    const devices = Xrandr.reloadDevices();
+    this.devs = {};
+    for(let device of devices) {
+      this.devs[device.label] = new Slide.Item(device.label, device.primary, device.brightness);
+      this.devs[device.label].onChange(Lang.bind(this, this.valueChanged));
+      this.menu.addMenuItem(this.devs[device.label]);
+    }
+
+  },
+  valueChanged: function(device, value) {
+    Xrandr.changeBrightness(device, value);
+  },
+  scroll: function(event) {
+    let direction = event.get_scroll_direction();
+    let delta;
+
+    if (event.is_pointer_emulated())
+        return Clutter.EVENT_PROPAGATE;
+
+    if (direction == Clutter.ScrollDirection.DOWN) {
+        delta = -1;
+    } else if (direction == Clutter.ScrollDirection.UP) {
+        delta =  1;
+    } else if (direction == Clutter.ScrollDirection.SMOOTH) {
+        let [dx, dy] = event.get_scroll_delta();
+        delta = -dy * 1;
+    }
+
+    let method;
+    if (delta > 0) {
+      method = 'increment';
+    } else {
+      method = 'decrement';
+    }
+
+    const devices = Xrandr.getDevices();
+    for(let device of devices) {
+      device.primary && this.devs[device.label] && this.devs[device.label][method]();
+    }
+
+    return Clutter.EVENT_STOP;
+},
+
+_onScrollEvent: function(actor, event) {
+    return this.scroll(event);
+},
   
 });
 

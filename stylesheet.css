@@ -1,0 +1,9 @@
+.device {
+    width: 3.5em;
+    text-align: right;
+}
+
+.percent {
+    font-size: 0.7em;
+    width: 4em;
+}
