@@ -1,9 +1,18 @@
 .device {
-    width: 3.5em;
+    width: 4.5em;
     text-align: right;
 }
 
+.minimum {
+    background:orange;
+    color: black;
+    padding:0.1em;
+    margin:0;
+}
+
+
 .percent {
     font-size: 0.7em;
-    width: 4em;
+    width: 3.5em;
+    text-align: center;
 }

@@ -3,19 +3,15 @@ const St = imports.gi.St;
 const PopupMenu = imports.ui.popupMenu;
 const Slider = imports.ui.slider;
 
-
-
 const Item = new Lang.Class({
     Name: 'Item',
     Extends: PopupMenu.PopupBaseMenuItem,
-
-    _init: function (device, isPrimary, brightness) {
-        this.max = 1;
-        this.min = 0.1;
+    _init: function (device, isPrimary) {
+        this.maxPercent = 100;
+        this.minPercent = 10;
         this.device = device;
         this.parent({ activate: false });
         this._buildUI(device + (isPrimary? '*':'')+ ' ');
-        this.setValue(brightness);
     },
     _buildUI : function(deviceLbl) {
 
@@ -43,19 +39,21 @@ const Item = new Lang.Class({
         this._sliderChanged(this._slider, value);
     },
     increment: function() {
-        this.setValue(this._slider.value + 0.05);
+        this.setValue(this._slider.value + 0.025);
     },
     decrement: function() {
-        this.setValue(this._slider.value - 0.05);
+        this.setValue(this._slider.value - 0.025);
     },
     _sliderChanged: function(slider, value) {
-        if (value < this.min) {
-            this.setValue(this.min);
+        if (value*this.maxPercent < this.minPercent) {
+            this.setValue(this.minPercent/this.maxPercent);
+            this.brightnessLabel.add_style_class_name('minimum');
             return;
         }
+        this.brightnessLabel.remove_style_class_name('minimum');
         
-        if (value > this.max) {
-            this.setValue(this.max);
+        if (value*this.maxPercent > this.maxPercent) {
+            this.setValue(1);
             return;
         }
 
@@ -65,7 +63,7 @@ const Item = new Lang.Class({
         }
     },
     updateLabel: function(value) {
-        const targetBrightness = Math.round(value*100);
+        const targetBrightness = Math.round(value*this.maxPercent);
         this.brightnessLabel.set_text(String('(' + targetBrightness + '%)'));
     }
 

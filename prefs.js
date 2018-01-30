@@ -8,7 +8,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = Me.imports.convenience;
 
-const WhatthecommitSettings = new GObject.Class({
+const BrightnessXrandsSettings = new GObject.Class({
   Name: "Whatthecommit-Settings",
   Extends: Gtk.Grid,
 
@@ -21,87 +21,95 @@ const WhatthecommitSettings = new GObject.Class({
     this._settings = Convenience.getSettings();
     this._settings.connect("changed", Lang.bind(this, this._loadSettings));
     
-    let showNotificationLabel = new Gtk.Label({
-      label: "Notify copied message: ",
+    let minValueLabel = new Gtk.Label({
+      label: "Min allowed value (prevent going black): ",
+      xalign: 0,
+      hexpand: true
+    });
+    this._minValueSpin = new Gtk.SpinButton();
+    this._minValueSpin.set_sensitive(true);
+    this._minValueSpin.set_range(0, 50);
+    this._minValueSpin.set_increments(1, 2);
+    this._minValueSpin.connect('value-changed', Lang.bind(this, function(w){
+      var value = w.get_value_as_int();
+      this._settings.set_int('min-value', value);
+    }));
+
+
+    this.attach(minValueLabel, 1, 1, 1, 1);
+    this.attach_next_to(this._minValueSpin, minValueLabel, 1, 1, 1);
+
+
+    let maxValueLabel = new Gtk.Label({
+      label: "Max allowed value: ",
+      xalign: 0,
+      hexpand: true
+    });
+    this._maxValueSpin = new Gtk.SpinButton();
+    this._maxValueSpin.set_sensitive(true);
+    this._maxValueSpin.set_range(90, 200);
+    this._maxValueSpin.set_increments(1, 2);
+    this._maxValueSpin.connect('value-changed', Lang.bind(this, function(w){
+      var value = w.get_value_as_int();
+      this._settings.set_int('max-value', value);
+    }));
+
+
+    this.attach(maxValueLabel, 1, 2, 1, 1);
+    this.attach_next_to(this._maxValueSpin, maxValueLabel, 1, 1, 1);
+
+
+    let applyPrimaryLabel = new Gtk.Label({
+      label: "Apply scroll event only on primary display: ",
       xalign: 0,
       hexpand: true
     });
 
-    this._showNotificationCheckbox = new Gtk.Switch();
-    this._showNotificationCheckbox.connect(
+    this._applyPrimaryCheckbox = new Gtk.Switch();
+    this._applyPrimaryCheckbox.connect(
       "notify::active",
       Lang.bind(this, function(button) {
-        this._settings.set_boolean("show-notification-on-message", button.active);
+        this._settings.set_boolean("apply-only-primary", button.active);
       })
     );
 
-    this.attach(showNotificationLabel, 1, 1, 1, 1);
-    this.attach_next_to(this._showNotificationCheckbox, showNotificationLabel, 1, 1, 1);
+    this.attach(applyPrimaryLabel, 1, 3, 1, 1);
+    this.attach_next_to(this._applyPrimaryCheckbox, applyPrimaryLabel, 1, 1, 1);
 
 
-    let includeMLabel = new Gtk.Label({
-      label: "Copy message with \"-m\": ",
+    let rememberSettingsLabel = new Gtk.Label({
+      label: "Remember brightness levels: ",
       xalign: 0,
       hexpand: true
     });
 
-    this._includeMLabelCheckbox = new Gtk.Switch();
-    this._includeMLabelCheckbox.connect(
+    this._saveValuesCheckbox = new Gtk.Switch();
+    this._saveValuesCheckbox.connect(
       "notify::active",
       Lang.bind(this, function(button) {
-        this._settings.set_boolean("include-m", button.active);
+        this._settings.set_boolean("save-values", button.active);
       })
     );
 
-    this.attach(includeMLabel, 1, 2, 1, 1);
-    this.attach_next_to(this._includeMLabelCheckbox, includeMLabel, 1, 1, 1);
-
-    let quotesLabel = new Gtk.Label({
-      label: "Copy with quotes: ",
-      xalign: 0,
-      hexpand: true
-    });
-
-    this._quotesNoneRadio = new Gtk.RadioButton({ group: null, label: "None", valign: Gtk.Align.START });
-    this._quotesNoneRadio.connect('toggled', Lang.bind(this, this._onQuoteChanged, ''));
-
-    this._quotesSimpleRadio = new Gtk.RadioButton({ group: this._quotesNoneRadio, label: "Simple '", valign: Gtk.Align.START });
-    this._quotesSimpleRadio.connect('toggled', Lang.bind(this, this._onQuoteChanged, '\''));
-
-    this._quotesDoubleRadio = new Gtk.RadioButton({ group: this._quotesNoneRadio, label: "Double \"", valign: Gtk.Align.START });
-    this._quotesDoubleRadio.connect('toggled', Lang.bind(this, this._onQuoteChanged, '"'));
-
-    this.attach(quotesLabel, 1, 3, 1, 1);
-    this.attach_next_to(this._quotesNoneRadio, quotesLabel, 1, 1, 1);
-    this.attach_next_to(this._quotesSimpleRadio, this._quotesNoneRadio, 1, 1, 1);
-    this.attach_next_to(this._quotesDoubleRadio, this._quotesSimpleRadio, 1, 1, 1);
+    this.attach(rememberSettingsLabel, 1, 4, 1, 1);
+    this.attach_next_to(this._saveValuesCheckbox, rememberSettingsLabel, 1, 1, 1);
 
 
-    const ackTxt = 'Using <a href="https://whatthecommit.com/">https://whatthecommit.com</a> by Nick Gerakines.';  
-    const ackLabel = new Gtk.Label({ label: ackTxt, use_markup: true, xalign: Gtk.Align.CENTER, yalign: Gtk.Align.CENTER });
-    this.attach(ackLabel, 1, 6, 10, 10);
-      
     this._loadSettings();
   },
   _loadSettings: function() {
-    this._showNotificationCheckbox.set_active(this._settings.get_boolean("show-notification-on-message"));
-    this._includeMLabelCheckbox.set_active(this._settings.get_boolean("include-m"));
-    
-    this._quotesNoneRadio.active = this._settings.get_string('quotes') === '';
-    this._quotesSimpleRadio.active = this._settings.get_string('quotes')=== '\'';
-    this._quotesDoubleRadio.active = this._settings.get_string('quotes') === '"';
-  },
-  _onQuoteChanged: function(button, quote) {
-    if (button.get_active()) {
-      this._settings.set_string('quotes', quote);
-  }
+    this._minValueSpin.set_value(this._settings.get_int('min-value'));
+    this._maxValueSpin.set_value(this._settings.get_int('max-value'));
+    this._applyPrimaryCheckbox.set_active(this._settings.get_boolean("apply-only-primary"));
+    this._saveValuesCheckbox.set_active(this._settings.get_boolean("save-values"));
+  
   }
 });
 
 function init() {}
 
 function buildPrefsWidget() {
-  let widget = new WhatthecommitSettings();
+  let widget = new BrightnessXrandsSettings();
   widget.show_all();
   return widget;
 }

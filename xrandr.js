@@ -30,7 +30,11 @@ function reloadDevices() {
                 matches = brightnessRegExp.exec(lines[i]);
                 if(matches !== null) {
                     candidateDevice.brightness = parseFloat(matches[1]);
-                    devices.push(candidateDevice);
+                    if (candidateDevice.primary) {
+                        devices.unshift(candidateDevice);
+                    } else {
+                        devices.push(candidateDevice);
+                    }
                     status = 0;
                     candidateDevice = {};
                 }
