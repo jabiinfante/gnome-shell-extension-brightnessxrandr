@@ -12,7 +12,7 @@
         "3.28",
         "3.30"
     ],
-    "name": "Brightness Control (Xranr)",
+    "name": "Brightness Control (Xrandr)",
     "url": "https://github.com/jabiinfante/gnome-shell-extension-brightnessxrandr",
     "version": 1,
     "settings-schema": "org.gnome.shell.extensions.brightnessxrandr"
