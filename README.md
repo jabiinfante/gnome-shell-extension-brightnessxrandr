@@ -2,14 +2,14 @@
 
 Manage every display's brightness level easily.
 
-It uses _xrand_'s --brightness option, so it does manage display brightness at a software level.
+It uses **xrand**'s _--brightness_ option, so it does manage display brightness at a software level.
 
-The good part? It work's almost **everywhere**.
+The good part? It should work **everywhere**.
 
 ![Screenshot](/screenshot.png)
 
 
-From xrand documentation:
+### From xrand documentation:
 
 ```
     --brightness brightness
