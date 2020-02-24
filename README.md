@@ -1,3 +1,7 @@
+# DO NOT USE
+
+It is not working anymore.
+
 # Gnome Shell Extension - Brightness Control using xrand (software)
 
 Manage every display's brightness level easily.
